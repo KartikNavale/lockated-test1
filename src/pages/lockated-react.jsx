@@ -10,6 +10,8 @@ const LockatedReact = () => {
   const [moveTo, setMoveTo] = useState(null);
   const [copyFrom, setCopyFrom] = useState(null);
   const [copyTo, setCopyTo] = useState(null);
+  const [activeTab, setActiveTab] = useState("move"); // "move" or "clone"
+
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const token = searchParams.get("token");
@@ -21,18 +23,12 @@ const LockatedReact = () => {
           `https://app.lockated.com/pms/account_setups/get_fm_users.json?token=${token}`
         );
 
-        console.log("API Response:", response.data);
-
         if (response.data && Array.isArray(response.data.users)) {
           const formattedOptions = response.data.users.map((user) => ({
             value: user.id,
             label: `${user.firstname} ${user.lastname}`,
           }));
-
-          console.log("Formatted Options:", formattedOptions);
           setMoveOptions(formattedOptions);
-        } else {
-          console.error("Unexpected API response structure:", response.data);
         }
       } catch (error) {
         console.error("Error fetching options:", error);
@@ -40,33 +36,24 @@ const LockatedReact = () => {
     };
 
     fetchOptions();
-  }, [token]); // Fetch when token changes
+  }, [token]);
 
-  // Handlers for SelectBox
-  const handleMoveFromChange = (selected) => {
-    setMoveFrom(selected?.value);
-  };
-
-  const handleMoveToChange = (selected) => {
-    setMoveTo(selected?.value);
-  };
-
-  const handleCopyFromChange = (selected) => {
-    setCopyFrom(selected?.value);
-  };
-
-  const handleCopyToChange = (selected) => {
-    setCopyTo(selected?.value);
-  };
-
-  // Submit Handler (POST API Call)
+  const handleTabChange = (tab) => setActiveTab(tab);
   const handleSubmit = async () => {
-    const postData = {
-      move_from: moveFrom,
-      move_to: moveTo,
-      copy_from: copyFrom,
-      copy_to: copyTo,
-    };
+    let postData;
+
+    if (activeTab === "move") {
+      postData = {
+        type: "move",
+        move_from_id: moveFrom,
+        move_to_id: moveTo,
+      };
+    } else {
+      postData = {
+        copy_from_id: copyFrom,
+        copy_to_id: copyTo,
+      };
+    }
 
     console.log("Submitting Data:", postData);
 
@@ -77,7 +64,6 @@ const LockatedReact = () => {
       );
 
       console.log("POST API Response:", response.data);
-
       alert("Data submitted successfully!");
     } catch (error) {
       console.error("Error submitting data:", error);
@@ -94,26 +80,18 @@ const LockatedReact = () => {
               <nav>
                 <div className="nav nav-tabs" id="nav-tab" role="tablist">
                   <button
-                    className="nav-link active lockated-tab me-2"
-                    id="nav-home-tab"
-                    data-bs-toggle="tab"
-                    data-bs-target="#nav-home"
-                    type="button"
-                    role="tab"
-                    aria-controls="nav-home"
-                    aria-selected="true"
+                    className={`nav-link lockated-tab me-2 ${
+                      activeTab === "move" ? "active" : ""
+                    }`}
+                    onClick={() => handleTabChange("move")}
                   >
                     Move Now
                   </button>
                   <button
-                    className="nav-link lockated-tab"
-                    id="nav-profile-tab"
-                    data-bs-toggle="tab"
-                    data-bs-target="#nav-profile"
-                    type="button"
-                    role="tab"
-                    aria-controls="nav-profile"
-                    aria-selected="false"
+                    className={`nav-link lockated-tab ${
+                      activeTab === "clone" ? "active" : ""
+                    }`}
+                    onClick={() => handleTabChange("clone")}
                   >
                     Clone Now
                   </button>
@@ -124,64 +102,68 @@ const LockatedReact = () => {
                 id="nav-tabContent"
               >
                 {/* Move Now Tab */}
-                <div
-                  className="tab-pane fade show active"
-                  id="nav-home"
-                  role="tabpanel"
-                  aria-labelledby="nav-home-tab"
-                  tabIndex={0}
-                >
-                  <div className="row">
-                    <div className="col-md-6 mt-1">
-                      <div className="form-group">
-                        <label>Move From</label>
-                        <SelectBox
-                          options={moveOptions}
-                          onChange={handleMoveFromChange}
-                        />
+                {activeTab === "move" && (
+                  <div className="tab-pane fade show active">
+                    <div className="row">
+                      <div className="col-md-6 mt-1">
+                        <div className="form-group">
+                          <label>Move From</label>
+                          <SelectBox
+                            options={moveOptions}
+                            onChange={(selected) => {
+                              console.log("Selected MoveFrom:", selected);
+                              setMoveFrom(selected);
+                            }}
+                          />
+                        </div>
                       </div>
-                    </div>
-                    <div className="col-md-6 mt-1">
-                      <div className="form-group">
-                        <label>Move To</label>
-                        <SelectBox
-                          options={moveOptions}
-                          onChange={handleMoveToChange}
-                        />
+                      <div className="col-md-6 mt-1">
+                        <div className="form-group">
+                          <label>Move To</label>
+                          <SelectBox
+                            options={moveOptions}
+                            onChange={(selected) => {
+                              console.log("Selected MoveFrom:", selected);
+                              setMoveTo(selected);
+                            }}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* Clone Now Tab */}
-                <div
-                  className="tab-pane fade"
-                  id="nav-profile"
-                  role="tabpanel"
-                  aria-labelledby="nav-profile-tab"
-                  tabIndex={0}
-                >
-                  <div className="row">
-                    <div className="col-md-6 mt-1">
-                      <div className="form-group">
-                        <label>Copy From</label>
-                        <SelectBox
-                          options={moveOptions}
-                          onChange={handleCopyFromChange}
-                        />
+                {activeTab === "clone" && (
+                  <div className="tab-pane fade show active">
+                    <div className="row">
+                      <div className="col-md-6 mt-1">
+                        <div className="form-group">
+                          <label>Copy From</label>
+                          <SelectBox
+                            options={moveOptions}
+                            onChange={(selected) => {
+                              console.log("Selected copyFrom:", selected);
+                              setCopyFrom(selected);
+                            }}
+                          />
+                        </div>
                       </div>
-                    </div>
-                    <div className="col-md-6 mt-1">
-                      <div className="form-group">
-                        <label>Copy To</label>
-                        <SelectBox
-                          options={moveOptions}
-                          onChange={handleCopyToChange}
-                        />
+                      <div className="col-md-6 mt-1">
+                        <div className="form-group">
+                          <label>Copy To</label>
+                          <SelectBox
+                            options={moveOptions}
+                            onChange={(selected) => {
+                              console.log("Selected copyTo:", selected);
+                              setCopyTo(selected);
+                            }}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
