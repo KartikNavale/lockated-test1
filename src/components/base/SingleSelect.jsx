@@ -3,12 +3,12 @@ import Select from "react-select";
 
 export default function SelectBox({
   label,
-  options,
+  options = [],
   defaultValue,
-  onChange,
+  onChange = () => {},  // ✅ Default function to avoid errors
   style = {},
   className = "",
-  isDisableFirstOption = false, // New prop
+  isDisableFirstOption = false,
 }) {
   const customStyles = {
     control: (base) => ({
@@ -18,11 +18,11 @@ export default function SelectBox({
     }),
     menu: (base) => ({
       ...base,
-      zIndex: 9999, // Ensure the dropdown appears above other elements
+      zIndex: 9999, // Ensure dropdown appears above other elements
     }),
     menuPortal: (base) => ({
       ...base,
-      zIndex: 9999, // Ensure portal menu is on top
+      zIndex: 9999,
     }),
   };
 
@@ -46,9 +46,9 @@ export default function SelectBox({
         options={formattedOptions}
         defaultValue={defaultOption}
         onChange={(selectedOption) => onChange(selectedOption?.value)}
-        isOptionDisabled={(option) => option.isDisabled} // Disabling logic
+        isOptionDisabled={(option) => option.isDisabled}
         styles={customStyles}
-        menuPortalTarget={document.body} // Render dropdown outside the table
+        menuPortalTarget={document.body}
       />
     </div>
   );
