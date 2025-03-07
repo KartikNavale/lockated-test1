@@ -5541,4 +5541,13 @@ ul.pagination.justify-content-center {
 }
 .lockated-tab-child {
   margin: 15px;
+  width: 30%;
+}
+.lockated-react-card {
+  align-items: center;
+  display: flex
+;
+  justify-content: center;
+  text-align: center;
+  flex-direction: column;
 }
